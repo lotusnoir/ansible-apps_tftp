@@ -1,0 +1,18 @@
+{{ ansible_managed | comment }}
+
+[Unit]
+Description=Simple http
+After=network-online.target
+StartLimitInterval=0
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/bin/python3.7 {{ tftp_install_dir }}/simplehttp.py
+ExecReload=/bin/kill -HUP $MAINPID
+SyslogIdentifier=http
+RestartSec=1
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,9 @@
+---
+tftp_install_dir: "/opt/tftp"
+tftp_force_install: false
+tftp_httproot_files: "/home/test/files"
+
+tftp_bdd_host: 10.10.10.10
+tftp_bdd_user: kea
+tftp_bdd_pass: strongpass
+tftp_bdd_db: kea

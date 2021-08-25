@@ -1,0 +1,86 @@
+from jinja2 import Environment, FileSystemLoader
+import psycopg2
+import psycopg2.extras
+import ipaddress
+from http.server import SimpleHTTPRequestHandler, HTTPServer
+from http import HTTPStatus
+import logging
+import os.path
+
+
+class RenderingError(Exception):
+    pass
+
+
+class TemplateHandler(SimpleHTTPRequestHandler):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory='/httproot/', **kwargs)
+#        super().__init__(*args, **kwargs)
+
+        
+    def _render(self):
+        '''
+        Render the requested path as a jinja2 template from 'templates/'
+        '''
+
+        remote_ip = self.headers.get('X-Forwarded-For', self.client_address[0])  # The actual requesting IP : use the proxy-provided header, or fallback on the source IP
+
+        # Connect to the database and extract the corresponding circuit-id (stored in the client_id column by Kea's Flex ID hook
+        conn = psycopg2.connect(host='{{ tftp_bdd_host }}', dbname='{{ tftp_bdd_db }}', user='{{ tftp_bdd_user }}', password='{{ tftp_bdd_pass }}', cursor_factory=psycopg2.extras.DictCursor)
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM lease4 WHERE address=%s", (int(ipaddress.ip_address(remote_ip)),))
+        res = cur.fetchone()
+        if not res:  # If there is no line returned, i.e. no corresponding DHCP lease
+            raise RenderingError('No lease found in database for %s' % remote_ip)
+        circuit_id = bytes(res['client_id'][1:]).decode('utf-8')  # The result is a byte array prefixed with an empty byte so we need to strip it and convert to an UTF-8 string
+
+        # Process the template to generate the actual file, and encode it as a byte array using UTF-8
+        j2 = Environment(loader=FileSystemLoader(os.path.join(self.directory, 'templates/')), trim_blocks=True)  # We will look for template in 'templates/', in the document root
+        self.rendered_response = j2.get_template(self.path).render(
+                                                    # Variables found in the jinja templates should be provided here :
+                                                    remote_ip=remote_ip,
+                                                    circuit_id=circuit_id
+                                                ).encode('utf-8')
+        logging.info('Rendered %s' % self.path)
+ 
+    def _set_headers(self):
+        '''
+        Set basic headers for a templatized file response
+        '''
+
+        self.send_response(200)
+        self.send_header('Content-type', 'text/plain')
+        self.send_header('Content-length', len(self.rendered_response))
+        self.end_headers()
+
+    def do_GET(self):
+        '''
+        Serve GET requests by first looking for Jinja templates in the 'templates' directory.
+        If not found, fallback to simple file serving.
+        '''
+
+        logging.info('Received request of %s from %r on behalf of %s' % (self.path, self.client_address, self.headers.get('X-Forwarded-For', "nobody")))
+        if os.path.exists(os.path.join(self.directory, 'templates/', os.path.relpath(self.path, '/'))):  # os.relpath(blah, '/') is just a fancy way to strip the leading '/' from the request path
+            try:
+                self._render()
+            except RenderingError as e:  # If we were unable to process the template. Usually due to a missing variable
+                logging.error('Unable to render %s : %s' % (self.path, str(e)))
+                self.send_error(HTTPStatus.FORBIDDEN, str(e))
+            except Exception as e:  # Any other issue. We still have to send a 500 error, though
+                self.send_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
+                raise
+            else:  # If no exception was raised, proceed to send the template result
+                self._set_headers()
+                self.wfile.write(self.rendered_response)
+        else:  # If the path was not found in templates/ use the standard file-serving HTTP mechanism of SimpleHTTPRequestHandler
+            super().do_GET()
+
+
+if __name__ == '__main__':
+    logging.getLogger().setLevel(logging.INFO)
+    server_address = ('0.0.0.0', 80)
+    httpd = HTTPServer(server_address, TemplateHandler)
+    logging.info("Starting HTTP server.")
+    httpd.serve_forever()
+

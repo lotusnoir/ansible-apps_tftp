@@ -1,0 +1,18 @@
+{{ ansible_managed | comment }}
+
+[Unit]
+Description=tftp
+After=network-online.target
+StartLimitInterval=0
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/bin/python3.7 {{ tftp_install_dir }}/tftp.py -b http -r http://localhost/
+ExecReload=/bin/kill -HUP $MAINPID
+SyslogIdentifier=tftp
+RestartSec=1
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
