@@ -1,8 +1,16 @@
 ---
+## Install
 tftp_install_dir: "/opt/tftp"
-tftp_force_install: false
-tftp_httproot_files: "/home/test/files"
+tftp_simplehttp_install: true
+tftp_python_bin: /usr/bin/python3
+tftp_force_install: true
+http_force_install: true
 
+## files source to copy inside tftp
+tftp_sources_dir: "shared-files"
+tftp_root_dir: "/tftproot"
+
+## tftp bdd
 tftp_bdd_host: 10.10.10.10
 tftp_bdd_user: kea
 tftp_bdd_pass: strongpass

@@ -8,7 +8,7 @@ StartLimitInterval=0
 [Service]
 Type=simple
 Restart=always
-ExecStart=/usr/bin/python3.7 {{ tftp_install_dir }}/simplehttp.py
+ExecStart={{ tftp_python_bin }} {{ tftp_install_dir }}/simplehttp.py
 ExecReload=/bin/kill -HUP $MAINPID
 SyslogIdentifier=http
 RestartSec=1

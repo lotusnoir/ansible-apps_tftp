@@ -124,7 +124,7 @@ def main(backend='static', root='/tftproot', address='0.0.0.0', port=1069, debug
         else:
             #logging.getLogger().setLevel(logging.INFO)
             logging.getLogger().setLevel(logging.INFO)
-        logging.getLogger().addHandler(RotatingFileHandler("/var/log/tftp.log"))    
+        logging.getLogger().addHandler(RotatingFileHandler("/var/log/tftp.log"))
         logging.info('Starting TFTP server with backend %s (on %s), listening on %s:%d' % (
                      backend, root, address, port))
         server = TFTPServer(address=address, port=port, retries=3, timeout=5,
