@@ -18,7 +18,7 @@ class TemplateHandler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory='/httproot/', **kwargs)
 #        super().__init__(*args, **kwargs)
 
-        
+
     def _render(self):
         '''
         Render the requested path as a jinja2 template from 'templates/'
@@ -43,7 +43,7 @@ class TemplateHandler(SimpleHTTPRequestHandler):
                                                     circuit_id=circuit_id
                                                 ).encode('utf-8')
         logging.info('Rendered %s' % self.path)
- 
+
     def _set_headers(self):
         '''
         Set basic headers for a templatized file response
@@ -83,4 +83,3 @@ if __name__ == '__main__':
     httpd = HTTPServer(server_address, TemplateHandler)
     logging.info("Starting HTTP server.")
     httpd.serve_forever()
-
