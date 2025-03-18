@@ -15,39 +15,53 @@ scenario:
     # - verify
     - destroy
 platforms:
-  - name: apps-tftp-ubuntu22
+  - name: apps-tftp-ubuntu20
+    image: lotusnoir/ansible_molecule_test_images:ubuntu20
     pre_build_image: true
+    cgroupns_mode: host
+    privileged: true
+    capabilities: ["NET_ADMIN"]
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+  - name: apps-tftp-ubuntu22
     image: lotusnoir/ansible_molecule_test_images:ubuntu22
-    docker_host: "${DOCKER_HOST:-unix://var/run/docker.sock}"
+    pre_build_image: true
+    cgroupns_mode: host
+    privileged: true
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
     groups:
       - python3
-  - name: apps-tftp-ubuntu20
+  - name: apps-tftp-ubuntu24
+    image: lotusnoir/ansible_molecule_test_images:ubuntu24
     pre_build_image: true
-    image: lotusnoir/ansible_molecule_test_images:ubuntu20
-    docker_host: "${DOCKER_HOST:-unix://var/run/docker.sock}"
-    capabilities: ['NET_ADMIN']
+    cgroupns_mode: host
+    privileged: true
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    groups:
+      - python3
   - name: apps-tftp-debian10
-    pre_build_image: true
     image: lotusnoir/ansible_molecule_test_images:debian10
-    docker_host: "${DOCKER_HOST:-unix://var/run/docker.sock}"
+    pre_build_image: true
+    cgroupns_mode: host
+    privileged: true
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
   - name: apps-tftp-debian11
-    pre_build_image: true
     image: lotusnoir/ansible_molecule_test_images:debian11
-    docker_host: "${DOCKER_HOST:-unix://var/run/docker.sock}"
+    pre_build_image: true
+    cgroupns_mode: host
+    privileged: true
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
     groups:
       - python3
   - name: apps-tftp-debian12
-    pre_build_image: true
     image: lotusnoir/ansible_molecule_test_images:debian12
-    docker_host: "${DOCKER_HOST:-unix://var/run/docker.sock}"
+    pre_build_image: true
+    cgroupns_mode: host
+    privileged: true
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
     groups:
@@ -57,6 +71,7 @@ provisioner:
   name: ansible
   connection_options:
     ansible_remote_tmp: /tmp
+    ansible_python_interpreter: auto_silent
   playbooks:
     prepare: prepare.yml
     converge: playbook.yml
