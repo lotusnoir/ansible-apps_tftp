@@ -6,7 +6,7 @@ driver:
   name: docker
 
 scenario:
-  name: default
+  name: ubuntu20
   test_sequence:
     - dependency
     - cleanup
@@ -21,8 +21,8 @@ scenario:
     - destroy
 
 platforms:
-  - name: apps-tftp-${MOLECULE_DISTRIB:-debian12}
-    image: lotusnoir/ansible_molecule_test_images:${MOLECULE_DISTRIB:-debian12}
+  - name: apps-tftp-ubuntu20
+    image: lotusnoir/ansible_molecule_test_images:ubuntu20
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     cgroupns_mode: host
     pre_build_image: true
